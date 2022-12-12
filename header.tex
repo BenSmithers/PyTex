@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage[margin=0.75in]{geometry}
+
+%Used for doing math things
+\usepackage{amsmath}
+
+%Used for fonts, I guess?
+\usepackage{amsfonts}
+
+% Amssymb is for assorted symbols
+\usepackage{amssymb}
+
+%The first package is used for incorporating images into the LaTeX file
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[section,below]{placeins}
+
+
+\usepackage{color}
+\usepackage{colortbl}
+\definecolor{ao}{rgb}{0.0, 0.5, 0.0}
+\definecolor{amber}{rgb}{1.0, 0.49, 0.0}
+\newcommand{\txpass}{\textcolor{ao}{PASS}}
+\newcommand{\txfail}{\textcolor{red}{FAIL}}
+\newcommand{\txwarn}{\textcolor{amber}{WARN}}
+
+
+\newcommand{\goodbox}{\mbox{\ooalign{\textcolor{ao}{$\checkmark$}\cr\hidewidth$\square$\hidewidth\cr}}}
+\newcommand{\badbox}{\mbox{\ooalign{\textcolor{red}{$\checkmark$}\cr\hidewidth$\square$\hidewidth\cr}}}
+\newcommand{\okbox}{\mbox{\ooalign{\textcolor{amber}{$\checkmark$}\cr\hidewidth$\square$\hidewidth\cr}}}
+
+\newcommand{\pass}{\begin{center}\begin{tabular}{ccccc}\\
+    {\Huge \goodbox  PASS}  & \hspace{2cm} & \framebox(16,16){} {\Huge PASS-WAIVED} & \hspace{2cm} & \framebox(16,16){} {\Huge FAIL}
+\end{tabular}\end{center}}
+
+\newcommand{\fail}{\begin{center}\begin{tabular}{ccccc}\\
+    \framebox(16,16){} {\Huge PASS} & \hspace{2cm} & \framebox(16,16){} {\Huge PASS-WAIVED} & \hspace{2cm} & {\Huge \badbox  FAIL}
+\end{tabular}\end{center}}
+
+\newcommand{\warn}{\begin{center}\begin{tabular}{ccccc}\\
+    \framebox(16,16){} {\Huge PASS} & \hspace{2cm} & {\Huge \okbox  PASS-WAIVED} & \hspace{2cm} & \framebox(16,16){} {\Huge FAIL}
+\end{tabular}\end{center}}
+
