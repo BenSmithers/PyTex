@@ -202,6 +202,8 @@ class PyTex(ContextDecorator):
 
         feature_string = f"\\begin{{center}}"
         feature_string+="\n"
+        feature_string += f"\\begin{{figure}}"
+        feature_string+="\n"
         i_row = 0
         i_column = 0
         todo = True
@@ -231,6 +233,14 @@ class PyTex(ContextDecorator):
 
         self._obj.write(feature_string)
         self._obj.write("\n")
+
+        caption_str = f"""
+        \\caption{{{caption}}}
+        \\end{{figure}}
+
+        """
+        self._obj.write(caption_str)
+
         self._obj.write(f"\\end{{center}}")
         self._obj.write("\n")
 
