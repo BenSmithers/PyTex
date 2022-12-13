@@ -120,6 +120,22 @@ class PyTex(ContextDecorator):
         self._obj.write(f"\\section{{{section_title}}}")
         self._obj.write("\n")
 
+    @classmethod
+    def _tabular_wrap(cls, the_string, eol_delimiter='\n')->str:
+        """
+            Takes a given string and wraps it in a tabular environment, allowing us to have multi-line entries in a table
+        """
+        if len(the_string.split(eol_delimiter))==1:
+            return the_string
+
+        full_str  = f"""\\begin{{tabular}}{{c}}
+        """
+        the_string = the_string.replace(eol_delimiter, "\\\\")
+        full_str += the_string
+        full_str += f"""\\end{{tabular}}"""
+
+        return full_str
+
     def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, alternate_colors = True, force_header_format=""):
         """
             Takes a Pandas dataframe and uses its headers as headers in the column. 
@@ -162,7 +178,7 @@ class PyTex(ContextDecorator):
 
         for i_entry in range(len(table[headers[0]])):
             row_str = ""
-            row_str += "&".join(str(table[header][i_entry])+" " for header in headers)
+            row_str += " & ".join(self._tabular_wrap(str(table[header][i_entry]), '-')+" " for header in headers)
             row_str += "\\\\"
             row_str += "\n"
             table_str += row_str
