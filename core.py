@@ -120,7 +120,7 @@ class PyTex(ContextDecorator):
         self._obj.write(f"\\section{{{section_title}}}")
         self._obj.write("\n")
 
-    def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, force_header_format=""):
+    def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, alternate_colors = True, force_header_format=""):
         """
             Takes a Pandas dataframe and uses its headers as headers in the column. 
             Adds in a provided caption.
@@ -140,15 +140,22 @@ class PyTex(ContextDecorator):
                 format_str = "l|"+"l"*(len(headers)-1)
             else:
                 format_str = "l"*len(headers)
+        if alternate_colors:
+            color_str = f"\\rowcolors{{2}}{{gray!25}}{{white}}\n"
+            header_row_str= f"\\rowcolor{{gray!50}}\n"
+        else:
+            color_str=""
+            header_row_str = ""
 
         table_str = f"""
     \\begin{{center}}
     \\begin{{table}}[h]
     \\centering
+    {color_str}
     \\caption{{{table_caption}}}
     \\begin{{tabular}}{{{format_str}}}\\hline
     """
-
+        table_str += header_row_str
         table_str += "&".join(headers) 
         table_str += f"\\\\\\hline"
         table_str += "\n"
