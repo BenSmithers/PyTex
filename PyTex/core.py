@@ -211,14 +211,17 @@ class PyTex(ContextDecorator):
         if n_figures==1:
             self.add_figure(caption, figpaths[0])
             return
-
-        rank = int(sqrt(n_figures))
-        if (sqrt(n_figures)-rank)<1e-15:
-            pass
+        elif n_figures==2:
+            rank = 1
+            pagewidth = "0.48\\linewidth"
         else:
-            rank += 1
+            rank = int(sqrt(n_figures))
+            if (sqrt(n_figures)-rank)<1e-15:
+                pass
+            else:
+                rank += 1
 
-        pagewidth = "{:.2f}".format(0.96/rank)+"\\linewidth"
+            pagewidth = "{:.2f}".format(0.96/rank)+"\\linewidth"
 
         feature_string = f"\\begin{{center}}"
         feature_string+="\n"
