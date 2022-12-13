@@ -91,6 +91,19 @@ class PyTex(ContextDecorator):
 """
         self._obj.write(this_str)
 
+    def inject_header(self, what:str):
+        """
+        Inject some LaTeX code into the header 
+
+        Must be called before anything any document-body calls 
+        """
+
+        if self._started:
+            raise Exception("Must add to the header before anything else")
+        assert isinstance(what, str), "Can only add type 'str' to the object; you passed {}".format(type(what))
+        self._obj.write(what)
+        self._obj.write("\n")
+
     def page_break(self):
         """
             Adds a page break 
