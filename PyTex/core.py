@@ -49,12 +49,15 @@ class PyTex(ContextDecorator):
         texname = ".".join(outname.split(".")[0:-1]) +".tex"
         pdfname =  ".".join(outname.split(".")[0:-1]) +".pdf"
 
-        subprocess.run(["pdflatex", self._name, "--output-directory {}".format(outdir)])
+        subprocess.run(["pdflatex","-interaction=nonstopmode", self._name, "--output-directory {}".format(outdir)])
         if self._keep_tex:
             shutil.copy(self._obj.name,os.path.join(outdir, texname))
         
         temp_name = os.path.split(self._obj.name)[1]
-        shutil.copy(temp_name+".pdf", os.path.join(outdir, pdfname))
+        try:
+            shutil.copy(temp_name+".pdf", os.path.join(outdir, pdfname))
+        except IOError:
+            pass # might've failed the compilation
         
 
         self._obj.close()
@@ -86,7 +89,7 @@ class PyTex(ContextDecorator):
         """
         if self._started:
             raise Exception("Title must be set before anything else")
-        this_str=f"""\\title{{ {title}  \\\\[10pt]{subtitle}}}
+        this_str=f"""\\title{{{{\Huge {title} }} \\\\[10pt] {{\large {subtitle} }}}}
 \\date{{\\today}}
 """
         self._obj.write(this_str)
@@ -112,6 +115,10 @@ class PyTex(ContextDecorator):
         self._obj.write("\\pagebreak")
         self._obj.write("\n")
 
+    def add_text(self, text:str):
+        self._check_start()
+        self._obj.write(text)
+
     def new_section(self, section_title:str):
         """
             Creates a section header with the given name
@@ -136,14 +143,20 @@ class PyTex(ContextDecorator):
 
         return full_str
 
-    def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, alternate_colors = True, force_header_format=""):
+    def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, 
+                    alternate_colors = True, force_header_format="", line_break_delimiter='_'):
         """
             Takes a Pandas dataframe and uses its headers as headers in the column. 
             Adds in a provided caption.
             
-            If you specify "separate_first_column", will put a vertical line after the first column
-
-            You can add a table formatter (like 'rr|ll|cc' or w/e) that is given to LaTeX
+        Params
+        --------------------------------------
+            table                   - Pandas dataframe to be table-formatted 
+            table_caption           - caption that goes under the table
+            separate_first_column   - will put a vertical line after the first column
+            alternate_colors        - rows will alternate colors
+            force_header_format     - (str) tex-format string specifing line alignment 
+            line_break_delimiter    - (str) instances of this character will be used to split lines in an individual cell 
         """
         self._check_start()
 
@@ -178,7 +191,7 @@ class PyTex(ContextDecorator):
 
         for i_entry in range(len(table[headers[0]])):
             row_str = ""
-            row_str += " & ".join(self._tabular_wrap(str(table[header][i_entry]), '-')+" " for header in headers)
+            row_str += " & ".join(self._tabular_wrap(str(table[header][i_entry]), line_break_delimiter)+" " for header in headers)
             row_str += "\\\\"
             row_str += "\n"
             table_str += row_str
@@ -217,8 +230,7 @@ class PyTex(ContextDecorator):
 
     def add_figures(self, caption:str, *figpaths):
         """
-            Adds multiple figures together in a minipage, up to 25
-            If more than 25 are requested raises ValueError
+            Adds multiple figurers together as panels aligned in a grid. Tries to figure out the grid dimensionality on its own 
         """
         self._check_start()
         if len(figpaths)==0:
@@ -228,7 +240,7 @@ class PyTex(ContextDecorator):
             self.add_figure(caption, figpaths[0])
             return
         elif n_figures==2:
-            rank = 1
+            rank = 2
             pagewidth = "0.48\\linewidth"
         else:
             rank = int(sqrt(n_figures))
@@ -248,21 +260,21 @@ class PyTex(ContextDecorator):
         todo = True
         while todo:
             if i_column==0:
-                feature_string+=f"""    \\begin{{minipage}}{{{pagewidth}}}
+                feature_string+=f"""    \\begin{{minipage}}{{0.98\\linewidth}}
 """
             
             print(i_row*rank + i_column)
             this_path = figpaths[i_row*rank + i_column]
-            feature_string+=f"""    \\begin{{minipage}}{{1.0\linewidth}}
+            feature_string+=f"""    \\begin{{minipage}}{{{pagewidth}}}
                 \\includegraphics[width=0.9\\linewidth]{{{this_path}}}
-        \\end{{minipage}}\\\\
+        \\end{{minipage}}%
 """ 
             if (i_row*rank + i_column) == (len(figpaths)-1):
                 todo = False
             
             if i_column==(rank-1) or (not todo):
                 feature_string+=f"""
-\\end{{minipage}}%
+\\end{{minipage}}\\\\
 """
 
             i_column+=1
