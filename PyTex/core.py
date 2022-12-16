@@ -68,7 +68,7 @@ class PyTex(ContextDecorator):
         self._obj.close()
 
         if not self._no_clean:
-            all_extra = glob(os.path.join(outdir,temp_name+".*"))
+            all_extra = glob(os.path.join(os.getcwd(),temp_name+".*"))
             for each in all_extra:
                 print("Cleaning up {}".format(each))
                 os.remove(each)
