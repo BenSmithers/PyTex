@@ -5,22 +5,27 @@ from glob import glob
 from tempfile import NamedTemporaryFile
 
 from warnings import warn
-from contextlib import ContextDecorator
+from contextlib import ContextDecorator # used to trigger the compilation 
 
 import pandas as pd
 
 from math import sqrt
 
 class PyTex(ContextDecorator):
-    def __init__(self, outpath, keep_tex=False):
+    def __init__(self, outpath, keep_tex=False, no_cleaning=False):
         """
             Usage:
                 outpath - filename of the desired output pdf 
                 keep_tex - set True to keep the .tex file used for the compilation. 
+                no_cleaning - set True to not clean up the TeX compilation files 
+            
+            Notes:
+                Kept texfiles will only have read permissions for the user who made them, since they're copied from tempfiles
         """
         self._outpath = outpath
 
         self._started = False
+        self._no_clean = no_cleaning
         self._keep_tex = keep_tex
     
     def __enter__(self):
@@ -62,10 +67,11 @@ class PyTex(ContextDecorator):
 
         self._obj.close()
 
-        all_extra = glob(os.path.join(outdir,temp_name+".*"))
-        for each in all_extra:
-            print("Cleaning up {}".format(each))
-            os.remove(each)
+        if not self._no_clean:
+            all_extra = glob(os.path.join(outdir,temp_name+".*"))
+            for each in all_extra:
+                print("Cleaning up {}".format(each))
+                os.remove(each)
 
         return False
 
@@ -107,6 +113,15 @@ class PyTex(ContextDecorator):
         self._obj.write(what)
         self._obj.write("\n")
 
+    def inject_tex(self, what:str):
+        """
+            writes whatever is passed to the the Tex file. Use with caution! 
+            No line breaks are added
+        """
+        self._check_start()
+        assert isinstance(what, str), "Can only add type 'str' to the object; you passed {}".format(type(what))
+        self._obj.write(what)
+
     def page_break(self):
         """
             Adds a page break 
@@ -114,10 +129,6 @@ class PyTex(ContextDecorator):
         self._check_start()
         self._obj.write("\\pagebreak")
         self._obj.write("\n")
-
-    def add_text(self, text:str):
-        self._check_start()
-        self._obj.write(text)
 
     def new_section(self, section_title:str):
         """

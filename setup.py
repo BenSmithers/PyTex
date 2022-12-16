@@ -11,7 +11,7 @@ def do_setup():
         'LICENSE*']
 
     setup(name="PyTex",
-            version="1.0.2",
+            version="1.0.3",
             description="Write LaTeX files via Python",
             author="Ben Smithers",
             url="https://github.com/BenSmithers/PyTex",
