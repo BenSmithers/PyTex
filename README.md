@@ -23,3 +23,8 @@ with PyTex("/path/to/out.pdf") as texobj:
     [code]
 ```
 the compiler will otherwise not be called. 
+
+## Contributing 
+
+Feel free to add issues with bugs or feature requests. 
+If you want to add anything yourself - make a fork, apply your changes, and submit a pull request! 

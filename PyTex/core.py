@@ -12,21 +12,38 @@ import pandas as pd
 from math import sqrt
 
 class PyTex(ContextDecorator):
-    def __init__(self, outpath, keep_tex=False, no_cleaning=False):
+    def __init__(self, outpath:str, keep_tex=False, no_cleaning=False, do_not_compile = False):
         """
             Usage:
                 outpath - filename of the desired output pdf 
                 keep_tex - set True to keep the .tex file used for the compilation. 
                 no_cleaning - set True to not clean up the TeX compilation files 
+                do_not_compile - set True to skip LaTeX compilation. Used for debugging; will force-keep the TeX file 
             
             Notes:
                 Kept texfiles will only have read permissions for the user who made them, since they're copied from tempfiles
         """
+        assert isinstance(outpath, str), "Outpath must be {}, got {}".format(str, type(outpath))
         self._outpath = outpath
+
+        filepath, filename = os.path.split(self._outpath)
+        if not os.path.exists(filepath):
+            print("Could not find out directory {}".format(filepath))
+            try:
+                print("Trying to make it")
+                os.mkdir(filepath)
+            except IOError:
+                print("Failed, exiting")
+                import sys
+                sys.exit()
 
         self._started = False
         self._no_clean = no_cleaning
         self._keep_tex = keep_tex
+        self._do_not_compile = do_not_compile
+
+        if self._do_not_compile:
+            self._keep_tex = True
     
     def __enter__(self):
         """
@@ -54,17 +71,20 @@ class PyTex(ContextDecorator):
         texname = ".".join(outname.split(".")[0:-1]) +".tex"
         pdfname =  ".".join(outname.split(".")[0:-1]) +".pdf"
 
-        subprocess.run(["pdflatex","-interaction=nonstopmode", self._name, "--output-directory {}".format(outdir)])
+        if not self._do_not_compile:
+            subprocess.run(["pdflatex","-interaction=nonstopmode", self._name, "--output-directory {}".format(outdir)])
+        else:
+            print("Skipping compilation step!")
         if self._keep_tex:
             shutil.copy(self._obj.name,os.path.join(outdir, texname))
         
         temp_name = os.path.split(self._obj.name)[1]
         try:
-            shutil.copy(temp_name+".pdf", os.path.join(outdir, pdfname))
+            if not self._do_not_compile:
+                shutil.copy(temp_name+".pdf", os.path.join(outdir, pdfname))
         except IOError:
             pass # might've failed the compilation
         
-
         self._obj.close()
 
         if not self._no_clean:
@@ -274,7 +294,6 @@ class PyTex(ContextDecorator):
                 feature_string+=f"""    \\begin{{minipage}}{{0.98\\linewidth}}
 """
             
-            print(i_row*rank + i_column)
             this_path = figpaths[i_row*rank + i_column]
             feature_string+=f"""    \\begin{{minipage}}{{{pagewidth}}}
                 \\includegraphics[width=0.9\\linewidth]{{{this_path}}}
