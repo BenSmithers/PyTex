@@ -174,8 +174,11 @@ class PyTex(ContextDecorator):
 
         return full_str
 
-    def add_table(self, table:pd.DataFrame, table_caption:str, separate_first_column=True, 
-                    alternate_colors = True, force_header_format="", line_break_delimiter='_'):
+
+    def add_table(self, table:pd.DataFrame, table_caption:str,
+                    format_str= '',
+                    separate_first_column=True, 
+                    alternate_colors = True, header_justification="", line_break_delimiter='_'):
         """
             Takes a Pandas dataframe and uses its headers as headers in the column. 
             Adds in a provided caption.
@@ -184,22 +187,39 @@ class PyTex(ContextDecorator):
         --------------------------------------
             table                   - Pandas dataframe to be table-formatted 
             table_caption           - caption that goes under the table
+            format_str              - format string, separate values with ","
             separate_first_column   - will put a vertical line after the first column
             alternate_colors        - rows will alternate colors
-            force_header_format     - (str) tex-format string specifing line alignment 
+            header_justification    - (str) tex-format string specifing line alignment 
             line_break_delimiter    - (str) instances of this character will be used to split lines in an individual cell 
+
+        Format Str notes - these are very tricky to get right. 
+            we split this string by "," and each entry is given to `format` to format the column's table 
+                03d   format int as length 3 with leading zeros
+                .4f   format float with four digits after decimal 
+                use an empty entry for no formatting 
+            try calling `help('FORMATTING')` in a python terminal for more 
+
         """
         self._check_start()
 
         headers = table.columns.values.tolist()
 
-        if force_header_format:
-            format_str = force_header_format
+        if format_str!="":
+            formaters = format_str.split(",")
+            do_format = True
+            if len(formaters) != len(headers):
+                raise ValueError("Format string should be same length ({}) as number of columns ({})")
+        else:
+            do_format = False
+
+        if header_justification:
+            justification = header_justification
         else:
             if separate_first_column:
-                format_str = "l|"+"l"*(len(headers)-1)
+                justification = "l|"+"l"*(len(headers)-1)
             else:
-                format_str = "l"*len(headers)
+                justification = "l"*len(headers)
         if alternate_colors:
             color_str = f"\\rowcolors{{2}}{{gray!25}}{{white}}\n"
             header_row_str= f"\\rowcolor{{gray!50}}\n"
@@ -213,7 +233,7 @@ class PyTex(ContextDecorator):
     \\centering
     {color_str}
     \\caption{{{table_caption}}}
-    \\begin{{tabular}}{{{format_str}}}\\hline
+    \\begin{{tabular}}{{{justification}}}\\hline
     """
         table_str += header_row_str
         table_str += "&".join(headers) 
@@ -222,7 +242,7 @@ class PyTex(ContextDecorator):
 
         for i_entry in range(len(table[headers[0]])):
             row_str = ""
-            row_str += " & ".join(self._tabular_wrap(str(table[header][i_entry]), line_break_delimiter)+" " for header in headers)
+            row_str += " & ".join(self._tabular_wrap(format(table[header][i_entry], formaters[i_h] if do_format else ""), line_break_delimiter)+" " for i_h, header in enumerate(headers))
             row_str += "\\\\"
             row_str += "\n"
             table_str += row_str
@@ -238,12 +258,14 @@ class PyTex(ContextDecorator):
 
     def add_figure(self, caption:str, figurepath:str)->str:
         """
-            Adds the figure
+            Adds the figure.
         """
         self._check_start()
+        figurepath = os.path.abspath(figurepath)
         if not os.path.exists(figurepath):
             warn("Could not find file {}".format(figurepath))
             return ""
+
 
         broken = figurepath.split(".")
 
@@ -266,6 +288,7 @@ class PyTex(ContextDecorator):
         self._check_start()
         if len(figpaths)==0:
             raise ValueError("Must provide at least one plot!")
+        figpaths = [os.path.abspath(each) for each in figpaths]
         n_figures = len(figpaths)
         if n_figures==1:
             self.add_figure(caption, figpaths[0])

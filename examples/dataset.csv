@@ -1,4 +1,4 @@
-Integer, Name, Float, Boool
-3, Threee, 3.12, True
-5, Forve, 7.12, False
-11, Llama, 12312321, True-taokd-alkda
+Integers, Some Strings, Floats, Bools as Strings, Other Floats
+3, First, 3.1212312, True, 5.1231231
+5, Second, 7.12346, False, 7.1231
+11, Third, 12312321, True-taokd-alkda, 8123.234
