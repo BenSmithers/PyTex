@@ -242,7 +242,7 @@ class PyTex(ContextDecorator):
 
         for i_entry in range(len(table[headers[0]])):
             row_str = ""
-            row_str += " & ".join(self._tabular_wrap(format(table[header][i_entry], formaters[i_h] if do_format else ""), line_break_delimiter)+" " for i_h, header in enumerate(headers))
+            row_str += " & ".join(self._tabular_wrap(format(table[header][i_entry], formaters[i_h] if do_format else ""), line_break_delimiter)+" " if table[header][i_entry] is not None else "null" for i_h, header in enumerate(headers))
             row_str += "\\\\"
             row_str += "\n"
             table_str += row_str
